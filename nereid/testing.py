@@ -6,19 +6,15 @@
     Implements test support helpers.  This module is lazily imported
     and usually not used in production environments.
 
-    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
+    :copyright: (c) 2010-2013 by Openlabs Technologies & Consulting (P) Ltd.
     :copyright: (c) 2010 by Armin Ronacher.
     :license: GPLv3, see LICENSE for more details.
 """
-import new
 from contextlib import contextmanager
 
 import jinja2
 import unittest
-import unittest2
 from flask.helpers import locked_cached_property
-from werkzeug import Client, EnvironBuilder
-from nereid import _request_ctx_stack
 from nereid.sessions import Session
 from nereid.contrib.locale import Babel
 from werkzeug.contrib.sessions import FilesystemSessionStore
