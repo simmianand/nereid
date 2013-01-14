@@ -76,7 +76,6 @@ setup(
     packages=[
         'nereid',
         'nereid.contrib',
-        'nereid.contrib.testing',
         'nereid.tests',
 
         'trytond.modules.nereid',
@@ -85,7 +84,6 @@ setup(
     package_dir={
         'nereid': 'nereid',
         'nereid.contrib': 'nereid/contrib',
-        'nereid.contrib.testing': 'nereid/contrib/testing',
         'nereid.tests': 'tests',
 
         'trytond.modules.nereid': 'trytond_nereid',
