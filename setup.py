@@ -3,23 +3,27 @@
 
     Nereid - Tryton as a web framework
 
-    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
+    :copyright: (c) 2010-2013 by Openlabs Technologies & Consulting (P) Ltd.
     :license: GPLv3, see LICENSE for more details
 '''
 import re
 
 from setuptools import setup, Command
 
+class RunTests(Command):
+    description = "Run tests"
 
-class PyTest(Command):
     user_options = []
+
     def initialize_options(self):
         pass
+
     def finalize_options(self):
         pass
+
     def run(self):
         import sys,subprocess
-        errno = subprocess.call([sys.executable, 'tests/texttestrunner.py'])
+        errno = subprocess.call([sys.executable, 'trytond_nereid/tests/__init__.py'])
         raise SystemExit(errno)
 
 
@@ -73,7 +77,7 @@ setup(
         'nereid',
         'nereid.contrib',
         'nereid.contrib.testing',
-        'nereid_tests',
+        'nereid.tests',
 
         'trytond.modules.nereid',
         'trytond.modules.nereid.tests',
@@ -82,7 +86,7 @@ setup(
         'nereid': 'nereid',
         'nereid.contrib': 'nereid/contrib',
         'nereid.contrib.testing': 'nereid/contrib/testing',
-        'nereid_tests': 'tests',
+        'nereid.tests': 'tests',
 
         'trytond.modules.nereid': 'trytond_nereid',
         'trytond.modules.nereid.tests': 'trytond_nereid/tests',
@@ -100,9 +104,10 @@ setup(
     nereid = trytond.modules.nereid
     """,
     tests_require=[
-        'unittest2',
-        'minimock',
+        'mock',
+        'pycountry',
     ],
-    test_suite = 'tests.suite',
-    cmdclass = {'test': PyTest},
+    cmdclass={
+        'test': RunTests,
+    },
 )
