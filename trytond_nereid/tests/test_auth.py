@@ -13,16 +13,12 @@ from mock import patch
 import trytond.tests.test_tryton
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
 from trytond.transaction import Transaction
+from trytond.tools import get_smtp_server
 from trytond.config import CONFIG
 from nereid.testing import NereidTestCase
 from nereid import permissions_required
 from werkzeug.exceptions import Forbidden
 
-CONFIG['smtp_server'] = 'smtpserver'
-CONFIG['smtp_user'] = 'test@xyz.com'
-CONFIG['smtp_password'] = 'testpassword'
-CONFIG['smtp_port'] = 587
-CONFIG['smtp_tls'] = True
 CONFIG['smtp_from'] = 'from@xyz.com'
 
 
@@ -44,8 +40,9 @@ class TestAuth(NereidTestCase):
         self.party_obj = POOL.get('party.party')
 
         # Patch SMTP Lib
-        self.smtplib_patcher = patch('smtplib.SMTP')
+        self.smtplib_patcher = patch('smtplib.SMTP', autospec=True)
         self.PatchedSMTP = self.smtplib_patcher.start()
+        self.mocked_smtp_instance = self.PatchedSMTP.return_value
 
     def tearDown(self):
         # Unpatch SMTP Lib
@@ -107,6 +104,9 @@ class TestAuth(NereidTestCase):
         }
         return templates.get(name)
 
+    def test_0005_mock_setup(self):
+        assert get_smtp_server() is self.PatchedSMTP.return_value
+
     def test_0010_register(self):
         """
         Registration must create a new party
@@ -131,6 +131,18 @@ class TestAuth(NereidTestCase):
                 data['confirm'] = 'password'
                 response = c.post('/en_US/registration', data=data)
                 self.assertEqual(response.status_code, 302)
+
+                self.assertEqual(
+                    self.mocked_smtp_instance.sendmail.call_count, 1
+                )
+                self.assertEqual(
+                    self.mocked_smtp_instance.sendmail.call_args[0][0],
+                    CONFIG['smtp_from']
+                )
+                self.assertEqual(
+                    self.mocked_smtp_instance.sendmail.call_args[0][1],
+                    [data['email']]
+                )
 
             self.assertEqual(
                 self.party_obj.search(

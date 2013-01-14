@@ -47,7 +47,7 @@ class NereidTestApp(Nereid):
         raise Exception("Template loading has to be implemented by TestCase")
 
     def load_backend(self):
-        """Just reuse the pool and DB alreadt loaded by the tryton test loader
+        """Just reuse the pool and DB already loaded by the tryton test loader
         """
         from trytond.tests.test_tryton import DB, POOL
         self._database = DB
