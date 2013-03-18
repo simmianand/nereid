@@ -138,6 +138,8 @@ class Nereid(Flask):
             'CACHE_KEY_PREFIX': '',
         })
 
+        self.url_map = Map(host_matching=True)
+
     def initialise(self):
         """The application needs initialisation to load the database 
         connection etc. In previous versions this was done with the
@@ -284,55 +286,24 @@ class Nereid(Flask):
         Website = self.pool.get("nereid.website")
         URLMap = self.pool.get('nereid.url_map')
 
-        #master_url_map = Map(host_matching=True)
-
-        #for website in Website.search([]):
-        #    for url_kwargs in website.url_map.get_rules_arguments():
-        #        url_kwargs['host'] = website.name
-        #        rule = self.url_rule_class(url_kwargs.pop('rule'), **url_kwargs)
-        #        rule.provide_automatic_options = True
-        #        master_url_map.add(rule)   # Add rule to map
-        #        if (not url_kwargs['build_only']) \
-        #                and not(url_kwargs['redirect_to']):
-                    # Add the method to the view_functions list if the
-                    # endpoint was not a build_only url
-        #            self.view_functions[url_kwargs['endpoint']] = self.get_method(
-        #                url_kwargs['endpoint']
-        #            )
-
-        url_maps = {}
-        # Load all url maps first because many websites might reuse the same
-        # URL map and it might be faster to load them just once
-        for url_map in URLMap.search([]):
-
-            # Define a new map
-            map = Map()
-
-            # Add the static url
-            map.add(
-                self.url_rule_class(
-                    self.static_url_path + '/<path:filename>',
-                    endpoint = 'static'
-                )
-            )
-
-            for url in url_map.get_rules_arguments():
-                rule = self.url_rule_class(url.pop('rule'), **url)
+        for website in Website.search([]):
+            for url_kwargs in website.url_map.get_rules_arguments():
+                url_kwargs['host'] = website.name
+                rule = self.url_rule_class(url_kwargs.pop('rule'), **url_kwargs)
                 rule.provide_automatic_options = True
-                map.add(rule)   # Add rule to map
+                self.url_map.add(rule)   # Add rule to map
 
-                if (not url['build_only']) and not(url['redirect_to']):
-                    # Add the method to the view_functions list if the
-                    # endpoint was not a build_only url
-                    self.view_functions[url['endpoint']] = self.get_method(
-                            url['endpoint']
+                if (not url_kwargs['build_only']) \
+                        and not(url_kwargs['redirect_to']):
+                   # Add the method to the view_functions list if the
+                   # endpoint was not a build_only url
+                    self.view_functions[url_kwargs['endpoint']] = self.get_method(
+                        url_kwargs['endpoint']
                     )
-            url_maps[url_map.id] = map
 
         for website in Website.search([]):
             self.websites[website.name] = {
                 'id': website.id,
-                'url_map': url_maps[website.url_map.id],
                 'application_user': website.application_user.id,
                 'guest_user': website.guest_user.id,
                 'company': website.company.id,
@@ -387,27 +358,6 @@ class Nereid(Flask):
                     response = self.make_response(self.handle_exception(e))
                     txn.cursor.rollback()
                 return response(environ, start_response)
-
-    def create_url_adapter(self, request):
-        """Return the URL adapter for the website instead of the standard
-        operation of just binding the environ to the url_map
-        """
-        if request is None:
-            # When the application context is prepared the value of request is
-            # None
-            return
-
-        website = get_website_from_host(request.environ['HTTP_HOST'])
-        if request is not None:
-            return self.websites[website]['url_map'].bind_to_environ(
-                request.environ, server_name=self.config['SERVER_NAME']
-            )
-        if self.config['SERVER_NAME'] is not None:
-            return self.websites[website]['url_map'].bind(
-                self.CONFIG['SERVER_NAME'],
-                script_name=self.config['APPLICATION_ROOT'] or '/',
-                url_SCHEME=self.config['PREFERRED_URL_SCHEME']
-            )
 
     def dispatch_request(self):
         """Does the request dispatching.  Matches the URL and returns the
