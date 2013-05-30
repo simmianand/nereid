@@ -1,12 +1,5 @@
-# -*- coding: UTF-8 -*-
-'''
-    nereid.backend
-
-    Backed - Tryton specific features
-
-    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
-    :license: GPLv3, see LICENSE for more details
-'''
+#This file is part of Tryton. The COPYRIGHT file at the top level of
+#this repository contains the full copyright notices and license terms.
 class TransactionManager(object):
 
     def __init__(self, database_name, user, context=None):
